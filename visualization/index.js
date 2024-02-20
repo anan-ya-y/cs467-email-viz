@@ -10,8 +10,8 @@
 window.addEventListener("load", drawCircles);
 
 function drawCircles() {  // set the dimensions and margins of the graph
-    var margin = {top: 10, right: 30, bottom: 50, left: 70},
-        width = 750 - margin.left - margin.right,
+    var margin = {top: 25, right: 70, bottom: 70, left: 70, axis: 10},
+        width = 750 - margin.left - margin.right - margin.axis,
         height = 750 - margin.top - margin.bottom;
 
     // append the svg object to the body of the page
@@ -47,7 +47,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
         .domain(["personal", "inbox"])
         .padding(.4);
         svg.append("g")
-        .call(d3.axisLeft(y).tickSize(0))
+        .call(d3.axisLeft(y).ticks(0))
         .select(".domain").remove()
 
         // Show the X scale
@@ -63,7 +63,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
         // var myColor = d3.scaleSequential()
         // .interpolator(d3.interpolateInferno)
         // .domain([d3.min(data, d => parseInt(d.time_elapsed)), d3.max(data, d => parseInt(d.time_elapsed))])
-        var myColor = d3.scaleOrdinal().domain(data).range(d3.schemeSet3);
+        var myColor = d3.scaleOrdinal().domain(data, d => d.recipient).range(d3.schemeSet3);
 
         // Add X axis label:
         svg.append("text")
@@ -72,6 +72,12 @@ function drawCircles() {  // set the dimensions and margins of the graph
             .attr("text-anchor", "middle")
             .attr("y", height + margin.top + 30)
             .text("Time Till Reply (seconds)");
+
+        // Add Y axis label:
+        svg.append("text")
+            .attr("y", -60)
+            .attr("transform", `translate(${10} ${height/2}) rotate(-90)`)
+            .text("Email Topics");
 
         // Show the main horizontal line
         svg
@@ -153,7 +159,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
             .attr("cx", function(d){ return(x(d.time_elapsed))})
             .attr("cy", function(d){ return( y(d.folder) + (y.bandwidth()/2) - radius/2 + Math.random()*radius )})
             .attr("r", 4)
-            .style("fill", function(d){ return(myColor(+d.time_elapsed)) })
+            .style("fill", function(d) { return(myColor(d.recipient)) }) //@trisha - needs to be recipient?
             .attr("stroke", "black")
             .on("mouseover", mouseover)
             .on("mousemove", mousemove)

@@ -23,3 +23,4 @@ recipient,folder,time_elapsed,sender
 "ron","inbox",2389,"henry"
 "john","personal",1403,"henry"
 "ben","inbox",1024,"henry"
+"mary","personal",3600,"henry"
