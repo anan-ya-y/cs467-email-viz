@@ -60,9 +60,10 @@ function drawCircles() {  // set the dimensions and margins of the graph
         .select(".domain").remove()
 
         // Color scale
-        var myColor = d3.scaleSequential()
-        .interpolator(d3.interpolateInferno)
-        .domain([d3.min(data, d => parseInt(d.time_elapsed)), d3.max(data, d => parseInt(d.time_elapsed))])
+        // var myColor = d3.scaleSequential()
+        // .interpolator(d3.interpolateInferno)
+        // .domain([d3.min(data, d => parseInt(d.time_elapsed)), d3.max(data, d => parseInt(d.time_elapsed))])
+        var myColor = d3.scaleOrdinal().domain(data).range(d3.schemeSet3);
 
         // Add X axis label:
         svg.append("text")
