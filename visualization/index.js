@@ -25,6 +25,36 @@ function drawCircles() {  // set the dimensions and margins of the graph
 
     // Read the data and compute summary statistics for each specie
     d3.csv("data.csv", function(data) {
+
+        var senders = data.map(d => d.sender);
+        var uniqueSenders = senders.filter((v, i, a) => a.indexOf(v) === i);
+        var dataFiltered = data.filter(d => d.sender === uniqueSenders[0]);
+
+        var dropdown = d3.select("#my_dataviz")
+            .append("text")
+            .text("Choose a sender: ")
+            .append("select")
+            .attr("id", "dropdown")
+            .on("change", function() {
+                var selected = d3.select(this).property("value")
+                console.log(selected)
+                update(selected)
+            })
+
+        dropdown.selectAll("option")
+            .data(uniqueSenders)
+            .enter()
+            .append("option")
+            .text(function(d) { return d; })
+            .attr("value", function(d) { return d; })
+
+        // what to do with update:
+        function update(selectedSender) {
+            var dataFiltered = data.filter(d => d.sender === selectedSender)
+            // clear the svg
+            svg.selectAll("*").remove()
+            console.log(dataFiltered)
+
         // Compute quartiles, median, inter quantile range min and max --> these info are then used to draw the box.
         var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
         .key(function(d) { return d.folder;})
@@ -39,7 +69,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
             // console.log(q1, median, q3, interQuantileRange, min, max)
             return({q1: q1, median: median, q3: q3, interQuantileRange: interQuantileRange, min: min, max: max})
         })
-        .entries(data)
+        .entries(dataFiltered)
 
         // Show the Y scale
         var y = d3.scaleBand()
@@ -52,7 +82,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
 
         // Show the X scale
         var x = d3.scaleLinear()
-        .domain([d3.min(data, d => parseInt(d.time_elapsed)), d3.max(data, d => parseInt(d.time_elapsed))])
+        .domain([d3.min(dataFiltered, d => parseInt(d.time_elapsed)), d3.max(dataFiltered, d => parseInt(d.time_elapsed))])
         .range([0, width])
         svg.append("g")
         .attr("transform", "translate(0," + height + ")")
@@ -63,7 +93,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
         // var myColor = d3.scaleSequential()
         // .interpolator(d3.interpolateInferno)
         // .domain([d3.min(data, d => parseInt(d.time_elapsed)), d3.max(data, d => parseInt(d.time_elapsed))])
-        var myColor = d3.scaleOrdinal().domain(data, d => d.recipient).range(d3.schemeSet3);
+        var myColor = d3.scaleOrdinal().domain(dataFiltered, d => d.recipient).range(d3.schemeSet3);
 
         // Add X axis label:
         svg.append("text")
@@ -153,7 +183,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
         var radius = 50
         svg
         .selectAll("indPoints")
-        .data(data)
+        .data(dataFiltered)
         .enter()
         .append("circle")
             .attr("cx", function(d){ return(x(d.time_elapsed))})
@@ -164,7 +194,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
             .on("mouseover", mouseover)
             .on("mousemove", mousemove)
             .on("mouseleave", mouseleave)
-
+    }
 
     })
 }
