@@ -36,20 +36,71 @@ function populateDropdown() {
     dropdownselect
         // Default entry
         .attr("selected", function(d) { 
-            update(uniqueSenders[0], getNRecipients());
+            uponDropdownChange(uniqueSenders[0]);
             return uniqueSenders[0];
         })
         // Update the graph when the dropdown is changed.
         .on("change", function() {
             var selectedSender = d3.select(this).property("value");
-            update(selectedSender, getNRecipients());
+            uponDropdownChange(selectedSender);
         });
+
+    function uponDropdownChange(sender){
+        var data = getFilteredData(emaildata, sender);
+        populateTopicSelection(data);
+        update(sender, getNRecipients())
+    }
 }
 function getSelectedSender() {
     var dropdown = d3.select("#senderdd");
     var selectedSender = dropdown.property("value");
     return selectedSender;
 }
+
+// Populate the topic selection checkbox entries
+function populateTopicSelection(filteredData) {
+    var topics = filteredData.map(d => d.topic);
+    var uniqueTopics = topics.filter((v, i, a) => a.indexOf(v) === i);
+
+    var topicSelection = d3.select("#topics");
+
+    // Clear the existing checkboxes (PRIVACY ISSUE)
+    topicSelection.selectAll("*").remove();
+
+    // Create new checkboxes    
+    var buttons = topicSelection.selectAll("input")
+        .data(uniqueTopics)
+        .enter()
+        .append("div")
+        .attr("class", "checkbox")
+        .on("change", function() {
+            // When the topics have changed, update the viz
+            update(getSelectedSender(), getNRecipients());
+        });
+    buttons.append("input")
+            .attr("type", "checkbox")
+            .attr("id", d => d)
+            .attr("name", "topicChk")
+            .attr("value", d => d)
+            .attr("class", "checkboxes")
+    buttons.append("label")
+            .attr("for", d => d)
+            .text(d=>d)
+            .attr("class", "checkboxes");
+}
+// Get the checked boxes. Code from StackOverflow
+function getCheckedTopics() {
+    var checkboxes = document.getElementsByName("topicChk");
+    var checkboxesChecked = [];
+    for (var i = 0; i < checkboxes.length; i++) {
+        if (checkboxes[i].checked) {
+            checkboxesChecked.push(checkboxes[i].defaultValue);
+        }
+    }
+    return checkboxesChecked.length > 0 ? checkboxesChecked : " ";
+}
+
+
 
 // Attach listener to the text entry (# of recipients)
 window.addEventListener("load", nRecipientsListener);
@@ -63,6 +114,7 @@ function getNRecipients() {
     var nRecipients = d3.select("#nrecipients");
     return nRecipients.property("value");
 }
+
 
 // Get k most frequent recipients
 // Ideal input: filtered data by sender
@@ -91,6 +143,10 @@ function getTopKFilteredData(k, data) {
     return newData;
 }
 
+function getFilteredData(data, sender) {
+    return data.filter(d => d.sender === sender)
+}
+
 function getQuartiles(data) {
     var returnme = d3.nest() // nest function allows to group the calculation per level of a factor
     .key(function(d) { return d.topic;})
@@ -116,6 +172,7 @@ function update(selectedSender, nRecipients) {
     // Filter the data based on the selected sender.
     var dataFiltered = data.filter(d => d.sender === selectedSender)
     dataFiltered = getTopKFilteredData(nRecipients, dataFiltered);
+    dataFiltered = dataFiltered.filter(d => getCheckedTopics().includes(d.topic));
 
     // clear the div
     d3.select("#my_dataviz").selectAll("*").remove();
