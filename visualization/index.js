@@ -80,9 +80,10 @@ function populateTopicSelection(filteredData) {
     buttons.append("input")
             .attr("type", "checkbox")
             .attr("id", d => d)
-            .attr("name", "topicChk")
+            .attr("name", "topicChk") // how we identify them
             .attr("value", d => d)
             .attr("class", "checkboxes")
+            .property('checked', true) // start checked
     buttons.append("label")
             .attr("for", d => d)
             .text(d=>d)
