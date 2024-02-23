@@ -99,7 +99,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
             // var myColor = d3.scaleSequential()
             // .interpolator(d3.interpolateInferno)
             // .domain([d3.min(data, d => parseInt(d.time_elapsed)), d3.max(data, d => parseInt(d.time_elapsed))])
-            var myColor = d3.scaleOrdinal().domain(dataFiltered, d => d.recipient).range(d3.schemeSet3);
+            var myColor = d3.scaleOrdinal().domain(recipients).range(d3.schemeSet3);
 
             // Add X axis label:
             svg.append("text")
@@ -195,7 +195,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
                 .attr("cx", function(d){ return(x(d.time_elapsed))})
                 .attr("cy", function(d){ return( y(d.folder) + (y.bandwidth()/2) - radius/2 + Math.random()*radius )})
                 .attr("r", 4)
-                .style("fill", function(d) { return(myColor(d.recipient)) }) //@trisha - needs to be recipient?
+                .style("fill", function(d) { return(myColor(d.recipient)) }) //@trisha - needs to be recipient? : yup! -trisha
                 .attr("stroke", "black")
                 .on("mouseover", mouseover)
                 .on("mousemove", mousemove)
