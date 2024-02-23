@@ -64,8 +64,6 @@ function getQuartiles(data) {
     return returnme;
 }
 
-
-
 // what to do with update:
 function update(selectedSender) {
     var data = emaildata;
@@ -75,7 +73,7 @@ function update(selectedSender) {
     var dataFiltered = data.filter(d => d.sender === selectedSender)
 
     // clear the div
-    d3.select("#my_dataviz").selectAll("svg").remove();
+    d3.select("#my_dataviz").selectAll("*").remove();
 
     // Deal with too few emails. 
     if (dataFiltered.length <= 20) {
