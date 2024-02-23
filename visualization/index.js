@@ -24,7 +24,7 @@ function populateDropdown() {
     var senders = emaildata.map(d => d.sender);
     var uniqueSenders = senders.filter((v, i, a) => a.indexOf(v) === i);
 
-    var dropdownselect = d3.select("select");
+    var dropdownselect = d3.select("#senderdd");
 
     // Create dropdown. 
     dropdownselect.selectAll("option")
@@ -42,9 +42,30 @@ function populateDropdown() {
         // Update the graph when the dropdown is changed.
         .on("change", function() {
             var selectedSender = d3.select(this).property("value");
-            update(selectedSender);
+            console.log(selectedSender, getSelectedSender())
+            update(selectedSender, getNRecipients());
         });
 }
+function getSelectedSender() {
+    var dropdown = d3.select("#senderdd");
+    var selectedSender = dropdown.property("value");
+    return selectedSender;
+}
+
+// Attach listener to the text entry (# of recipients)
+window.addEventListener("load", nRecipientsListener);
+function nRecipientsListener() {
+    var nRecipients = d3.select("#nrecipients");
+    nRecipients.on("change", function() {
+        update(getSelectedSender(), this.value);
+    });
+}
+function getNRecipients() {
+    var nRecipients = d3.select("#nrecipients");
+    return nRecipients.property("value");
+}
+
+
 
 function getQuartiles(data) {
     var returnme = d3.nest() // nest function allows to group the calculation per level of a factor
@@ -66,9 +87,10 @@ function getQuartiles(data) {
 }
 
 // what to do with update:
-function update(selectedSender) {
+function update(selectedSender, nRecipients) {
     var data = emaildata;
     console.log("Selected sender: ", selectedSender); 
+    console.log("Number of recipients: ", nRecipients);
 
     // Filter the data based on the selected sender.
     var dataFiltered = data.filter(d => d.sender === selectedSender)
