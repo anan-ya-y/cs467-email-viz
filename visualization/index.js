@@ -148,7 +148,6 @@ function update(selectedSender, nRecipients) {
         .append("svg")  
         .attr("width", rightPanelWidth)
         .attr("height", height + margin.top + margin.bottom)
-        .attr("style", "outline: thin solid red;")   //This will do the job
 
 
 
