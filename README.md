@@ -47,3 +47,13 @@ python3 clean_data.py scott-s
 python3 clean_data.py mckay-b
 ```
 
+### Create full data csv
+
+``` 
+jupyter nbconvert --to python analysis.ipynb
+python3 analysis.py
+```
+
+### Open the visualization
+
+Open `index.html` in the `visualization/` folder. 
