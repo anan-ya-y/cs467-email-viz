@@ -1,2 +1,6 @@
 data/*
 processed_data/*
+
+# Temp files generated while convering ipynbs
+clean_data.py
+analysis.py
