@@ -24,17 +24,10 @@ function drawCircles() {  // set the dimensions and margins of the graph
                 "translate(" + margin.left + "," + margin.top + ")");
 
     // Read the data and compute summary statistics for each specie
-    d3.csv("analyzed_data.csv", function(data) {
-        var senders_recipients = data.map(d => d.sender_recipient).splice(0,1);
-        var senders = []
-        var recipients = []
-        senders_recipients.forEach(se => {
-            var arr = se.split('\'')
-            senders.push(arr[1])
-            recipients.push(arr[3])
-        });
+    d3.csv("../processed_data/analyzed_data.csv", function(data) {
+        var senders = data.map(d => d.sender);
         var uniqueSenders = senders.filter((v, i, a) => a.indexOf(v) === i);
-        var dataFiltered = data.filter(d => d.sender_recipient.includes(uniqueSenders[0]));
+        var dataFiltered = data.filter(d => d.sender === uniqueSenders[0]);
 
         var dropdown = d3.select("#my_dataviz")
             .append("text")
@@ -56,21 +49,22 @@ function drawCircles() {  // set the dimensions and margins of the graph
 
         // what to do with update:
         function update(selectedSender) {
-            var dataFiltered = data.filter(d => d.senders_recipients.includes(selectedSender))
+            var dataFiltered = data.filter(d => d.sender === selectedSender)
             // clear the svg
             svg.selectAll("*").remove()
             console.log(dataFiltered)
 
             // Compute quartiles, median, inter quantile range min and max --> these info are then used to draw the box.
             var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
-            .key(function(d) { return d.folder;})
+            .key(function(d) { return d.topic;})
             .rollup(function(d) {
-                var q1 = d3.quantile(d.map(function(g) { return parseInt(g.time_elapsed);}).sort(d3.ascending),.25)
-                var median = d3.quantile(d.map(function(g) { return parseInt(g.time_elapsed);}).sort(d3.ascending),.5)
-                var q3 = d3.quantile(d.map(function(g) { return parseInt(g.time_elapsed);}).sort(d3.ascending),.75)
+                var q1 = d3.quantile(d.map(function(g) { return parseInt(g.replyspeed)/60;}).sort(d3.ascending),.25)
+                var median = d3.quantile(d.map(function(g) { return parseInt(g.replyspeed)/60;}).sort(d3.ascending),.5)
+                var q3 = d3.quantile(d.map(function(g) { return parseInt(g.replyspeed)/60;}).sort(d3.ascending),.75)
                 var interQuantileRange = q3 - q1
                 var min = q1 - 1.5*interQuantileRange
                 var max = q3 + 1.5*interQuantileRange
+                console.log(q1, median, q3, interQuantileRange, min, max)
                 // console.log(d.map(function(g) { return parseInt(g.time_elapsed);}).sort(d3.ascending))
                 // console.log(q1, median, q3, interQuantileRange, min, max)
                 return({q1: q1, median: median, q3: q3, interQuantileRange: interQuantileRange, min: min, max: max})
@@ -80,7 +74,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
             // Show the Y scale
             var y = d3.scaleBand()
             .range([ height, 0 ])
-            .domain(["personal", "inbox"])
+            .domain(data.map(d => d.topic))
             .padding(.4);
             svg.append("g")
             .call(d3.axisLeft(y).ticks(0))
@@ -88,18 +82,18 @@ function drawCircles() {  // set the dimensions and margins of the graph
 
             // Show the X scale
             var x = d3.scaleLinear()
-            .domain([d3.min(dataFiltered, d => parseInt(d.time_elapsed)), d3.max(dataFiltered, d => parseInt(d.time_elapsed))])
+            .domain([d3.min(dataFiltered, d => parseInt(d.replyspeed)/60), d3.max(dataFiltered, d => parseInt(d.replyspeed)/60)])
             .range([0, width])
             svg.append("g")
             .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x).ticks(15))
+            .call(d3.axisBottom(x))
             .select(".domain").remove()
 
             // Color scale
             // var myColor = d3.scaleSequential()
             // .interpolator(d3.interpolateInferno)
             // .domain([d3.min(data, d => parseInt(d.time_elapsed)), d3.max(data, d => parseInt(d.time_elapsed))])
-            var myColor = d3.scaleOrdinal().domain(recipients).range(d3.schemeSet3);
+            var myColor = d3.scaleOrdinal().domain(dataFiltered, d => d.recipient).range(d3.schemeSet3);
 
             // Add X axis label:
             svg.append("text")
@@ -169,7 +163,7 @@ function drawCircles() {  // set the dimensions and margins of the graph
                 .duration(200)
                 .style("opacity", 1)
             tooltip
-                .html("<span style='color:grey'>Time Elapsed: </span>" + d.time_elapsed) // + d.Prior_disorder + "<br>" + "HR: " +  d.HR)
+                .html("<span style='color:grey'>Time Elapsed: </span>" + (d.replyspeed/60)) // + d.Prior_disorder + "<br>" + "HR: " +  d.HR)
                 .style("left", (d3.mouse(this)[0]+30) + "px")
                 .style("top", (d3.mouse(this)[1]+30) + "px")
             }
@@ -192,10 +186,10 @@ function drawCircles() {  // set the dimensions and margins of the graph
             .data(dataFiltered)
             .enter()
             .append("circle")
-                .attr("cx", function(d){ return(x(d.time_elapsed))})
-                .attr("cy", function(d){ return( y(d.folder) + (y.bandwidth()/2) - radius/2 + Math.random()*radius )})
+                .attr("cx", function(d){ return(x(d.replyspeed/60))})
+                .attr("cy", function(d){ return( y(d.topic) + (y.bandwidth()/2) - radius/2 + Math.random()*radius )})
                 .attr("r", 4)
-                .style("fill", function(d) { return(myColor(d.recipient)) }) //@trisha - needs to be recipient? : yup! -trisha
+                .style("fill", function(d) { return(myColor(d.recipient)) }) //@trisha - needs to be recipient?
                 .attr("stroke", "black")
                 .on("mouseover", mouseover)
                 .on("mousemove", mousemove)
