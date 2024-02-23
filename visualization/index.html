@@ -10,8 +10,18 @@
 <!-- Create a div where the graph will take place -->
 <body>
   <script src="https://d3js.org/d3.v4.js"></script>
-  <script src="index.js"></script>
-  <div id="my_dataviz"></div>
-  <!-- plug-in for color scale -->
+  
   <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <script src="index.js"></script>
+
+
+  <!-- plug-in for color scale -->
+  <h2 class="horiz-flex-center">Choose a sender: <select id="senderdd"></select></h2>
+  <div id="top_recipients">
+    <h2>Top <input type="number" value="10" id="nrecipients"> recipients</h2>
+  </div>
+  <div id="topics">
+    <h2> Select topics:</h2>
+  </div>
+  <div id="my_dataviz"></div>
 </body>
