@@ -36,7 +36,7 @@ function populateDropdown() {
     dropdownselect
         // Default entry
         .attr("selected", function(d) { 
-            update(uniqueSenders[0]);
+            update(uniqueSenders[0], getNRecipients());
             return uniqueSenders[0];
         })
         // Update the graph when the dropdown is changed.
@@ -65,7 +65,32 @@ function getNRecipients() {
     return nRecipients.property("value");
 }
 
+// Get k most frequent recipients
+// Ideal input: filtered data by sender
+// Github copilot wrote this function. 
+function getTopKRecipients(k, data) {
+    var recipients = data.map(d => d.recipient);
+    var uniqueRecipients = recipients.filter((v, i, a) => a.indexOf(v) === i);
+    var recipientCounts = uniqueRecipients.map(r => {
+        return {recipient: r, count: recipients.filter(x => x === r).length}
+    });
+    recipientCounts.sort((a, b) => b.count - a.count);
+    return recipientCounts.slice(0, k);
+}
 
+// return a new filtered dataset with "Other" for non-topk recipients
+function getTopKFilteredData(k, data) {
+    var topKRecipients = getTopKRecipients(k, data);
+    var topKSet = new Set(topKRecipients.map(d => d.recipient));
+    var newData = data.map(d => {
+        if (topKSet.has(d.recipient)) {
+            return d;
+        } else {
+            return {...d, recipient: "Other"};
+        }
+    });
+    return newData;
+}
 
 function getQuartiles(data) {
     var returnme = d3.nest() // nest function allows to group the calculation per level of a factor
@@ -94,6 +119,8 @@ function update(selectedSender, nRecipients) {
 
     // Filter the data based on the selected sender.
     var dataFiltered = data.filter(d => d.sender === selectedSender)
+    dataFiltered = getTopKFilteredData(nRecipients, dataFiltered);
+    console.log(dataFiltered.map(d => d.topic));
 
     // clear the div
     d3.select("#my_dataviz").selectAll("*").remove();
@@ -150,9 +177,9 @@ function update(selectedSender, nRecipients) {
     // var myColor = d3.scaleSequential()
     // .interpolator(d3.interpolateInferno)
     // .domain([d3.min(data, d => parseInt(d.time_elapsed)), d3.max(data, d => parseInt(d.time_elapsed))])
-    var uniqueRecipients = emaildata.map(d => d.recipient)
+    var uniqueRecipients = dataFiltered.map(d => d.recipient)
                                     .filter((v, i, a) => a.indexOf(v) === i);
-    var myColor = d3.scaleOrdinal().domain(uniqueRecipients).range(d3.schemeSet3);
+    var myColor = d3.scaleOrdinal().domain(uniqueRecipients).range(d3.schemeSet1    );
 
     // Add X axis label:
     mainsvg.append("text")
