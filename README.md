@@ -4,6 +4,12 @@ Project for CS 467: Social Visualization, Spring 2024.
 
 ## Design Project 1: Visualizing email reply times
 
+### Python requirements
+
+```
+pip install -r requirements.txt
+```
+
 ### Downloading the dataset:
 
 Run in this folder:
