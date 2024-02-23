@@ -42,7 +42,6 @@ function populateDropdown() {
         // Update the graph when the dropdown is changed.
         .on("change", function() {
             var selectedSender = d3.select(this).property("value");
-            console.log(selectedSender, getSelectedSender())
             update(selectedSender, getNRecipients());
         });
 }
@@ -102,9 +101,6 @@ function getQuartiles(data) {
         var interQuantileRange = q3 - q1
         var min = Math.max(q1 - 1.5*interQuantileRange, 0)
         var max = q3 + 1.5*interQuantileRange
-        // console.log(q1, median, q3, interQuantileRange, min, max)
-        // console.log(d.map(function(g) { return parseInt(g.time_elapsed);}).sort(d3.ascending))
-        // console.log(q1, median, q3, interQuantileRange, min, max)
         return({q1: q1, median: median, q3: q3, interQuantileRange: interQuantileRange, min: min, max: max})
     })
     .entries(data);
@@ -120,7 +116,6 @@ function update(selectedSender, nRecipients) {
     // Filter the data based on the selected sender.
     var dataFiltered = data.filter(d => d.sender === selectedSender)
     dataFiltered = getTopKFilteredData(nRecipients, dataFiltered);
-    console.log(dataFiltered.map(d => d.topic));
 
     // clear the div
     d3.select("#my_dataviz").selectAll("*").remove();
@@ -157,7 +152,7 @@ function update(selectedSender, nRecipients) {
     // Show the Y scale
     var y = d3.scaleBand()
         .range([ height, 0 ])
-        .domain(data.map(d => d.topic))
+        .domain(dataFiltered.map(d => d.topic))
         .padding(.4);
     mainsvg.append("g")
         .call(d3.axisLeft(y).ticks(0))
@@ -178,7 +173,7 @@ function update(selectedSender, nRecipients) {
     // .domain([d3.min(data, d => parseInt(d.time_elapsed)), d3.max(data, d => parseInt(d.time_elapsed))])
     var uniqueRecipients = dataFiltered.map(d => d.recipient)
                                     .filter((v, i, a) => a.indexOf(v) === i);
-    var myColor = d3.scaleOrdinal().domain(uniqueRecipients).range(d3.schemeSet1    );
+    var myColor = d3.scaleOrdinal().domain(uniqueRecipients).range(d3.schemeCategory10);
 
     // Add X axis label:
     mainsvg.append("text")
