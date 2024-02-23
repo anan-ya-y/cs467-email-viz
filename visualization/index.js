@@ -5,6 +5,7 @@
 var margin = {top: 25, right: 70, bottom: 70, left: 70, axis: 10},
     width = 750 - margin.left - margin.right - margin.axis,
     height = 750 - margin.top - margin.bottom;
+var rightPanelWidth = 300;
 
 var datafilename = "../processed_data/analyzed_data.csv"
 var emaildata = [];
@@ -85,13 +86,21 @@ function update(selectedSender) {
 
 
     // Create the new SVG.
-    var svg = d3.select("#my_dataviz")
-    .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform",
-            "translate(" + margin.left + "," + margin.top + ")");
+    var mainsvg = d3.select("#my_dataviz")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform",
+                "translate(" + margin.left + "," + margin.top + ")");
+
+    // Create the right panel
+    var rightPanelSvg = d3.select("#my_dataviz")
+        .append("svg")  
+        .attr("width", rightPanelWidth)
+        .attr("height", height + margin.top + margin.bottom)
+        .attr("style", "outline: thin solid red;")   //This will do the job
+
 
 
     // Compute quartiles, median, inter quantile range min and max --> these info are then used to draw the box.
@@ -102,7 +111,7 @@ function update(selectedSender) {
         .range([ height, 0 ])
         .domain(data.map(d => d.topic))
         .padding(.4);
-    svg.append("g")
+    mainsvg.append("g")
         .call(d3.axisLeft(y).ticks(0))
         .select(".domain").remove()
 
@@ -110,7 +119,7 @@ function update(selectedSender) {
     var x = d3.scaleLinear()
         .domain([0, d3.max(dataFiltered, d => parseInt(d.replyspeed)/60)])
         .range([0, width])
-    svg.append("g")
+    mainsvg.append("g")
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x))
         .select(".domain").remove()
@@ -119,10 +128,12 @@ function update(selectedSender) {
     // var myColor = d3.scaleSequential()
     // .interpolator(d3.interpolateInferno)
     // .domain([d3.min(data, d => parseInt(d.time_elapsed)), d3.max(data, d => parseInt(d.time_elapsed))])
-    var myColor = d3.scaleOrdinal().domain(dataFiltered, d => d.recipient).range(d3.schemeSet3);
+    var uniqueRecipients = emaildata.map(d => d.recipient)
+                                    .filter((v, i, a) => a.indexOf(v) === i);
+    var myColor = d3.scaleOrdinal().domain(uniqueRecipients).range(d3.schemeSet3);
 
     // Add X axis label:
-    svg.append("text")
+    mainsvg.append("text")
         .attr("text-anchor", "end")
         .attr("x", width/2)
         .attr("text-anchor", "middle")
@@ -130,13 +141,13 @@ function update(selectedSender) {
         .text("Time Till Reply (seconds)");
 
     // Add Y axis label:
-    svg.append("text")
+    mainsvg.append("text")
         .attr("y", -60)
         .attr("transform", `translate(${10} ${height/2}) rotate(-90)`)
         .text("Email Topics");
 
     // Show the main horizontal line
-    svg.selectAll("horiLines")
+    mainsvg.selectAll("horiLines")
         .data(sumstat)
         .enter()
         .append("line")
@@ -148,7 +159,7 @@ function update(selectedSender) {
             .style("width", 40)
 
     // rectangle for the main box
-    svg.selectAll("boxes")
+    mainsvg.selectAll("boxes")
         .data(sumstat)
         .enter()
         .append("rect")
@@ -161,7 +172,7 @@ function update(selectedSender) {
             .style("opacity", 0.3)
 
     // Show the median
-    svg.selectAll("medianLines")
+    mainsvg.selectAll("medianLines")
         .data(sumstat)
         .enter()
         .append("line")
@@ -204,7 +215,7 @@ function update(selectedSender) {
 
     // Add individual points with jitter
     var radius = 50
-    svg
+    mainsvg
     .selectAll("indPoints")
     .data(dataFiltered)
     .enter()
@@ -217,4 +228,27 @@ function update(selectedSender) {
         .on("mouseover", mouseover)
         .on("mousemove", mousemove)
         .on("mouseleave", mouseleave)
+
+
+    // Add one dot in the legend for each name.
+    rightPanelSvg.selectAll("mydots")
+        .data(uniqueRecipients)
+        .enter()
+        .append("circle")
+        .attr("cx", 10)
+        .attr("cy", function(d,i){ return 50 + i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+        .attr("r", 7)
+        .style("fill", function(d){ return myColor(d)})
+
+    // Add one dot in the legend for each name.
+    rightPanelSvg.selectAll("mylabels")
+        .data(uniqueRecipients)
+        .enter()
+        .append("text")
+        .attr("x", 30)
+        .attr("y", function(d,i){ return 50 + i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+        .style("fill", function(d){ return myColor(d)})
+        .text(function(d){ return d})
+        .attr("text-anchor", "left")
+        .style("alignment-baseline", "middle")
 }
